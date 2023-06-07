@@ -1,80 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Object Detection Web App</title>
-  <style>
-    #video-container {
-      display: none;
-    }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+  <title>Camera Viewer</title>
 </head>
 <body>
   <button onclick="openCamera()">Open Camera</button>
-  <div id="video-container">
-    <video id="video-player" width="640" height="480" controls autoplay></video>
-  </div>
+  <div id="cameraContainer"></div>
 
   <script>
-    let videoContainer = document.getElementById('video-container');
-    let videoPlayer = document.getElementById('video-player');
-    let objectDetected = false;
+    function openCamera() {
+      // Check if the browser supports getUserMedia
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // Access the user's camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+          .then(function (stream) {
+            var videoElement = document.createElement('video');
+            videoElement.srcObject = stream;
+            videoElement.autoplay = true;
 
-    async function openCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        videoPlayer.srcObject = stream;
-        videoPlayer.onloadedmetadata = function() {
-          videoPlayer.play();
-          processVideo();
-        };
-      } catch (error) {
-        console.log('Unable to access the camera: ' + error.message);
-      }
-    }
-
-    async function loadModel() {
-      try {
-        const model = await cocoSsd.load();
-        return model;
-      } catch (error) {
-        console.log('Unable to load the object detection model: ' + error.message);
-      }
-    }
-
-    async function processVideo() {
-      let canvas = document.createElement('canvas');
-      let context = canvas.getContext('2d');
-      canvas.width = videoPlayer.videoWidth;
-      canvas.height = videoPlayer.videoHeight;
-      let model = await loadModel();
-
-      function detectObjects() {
-        context.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-        let imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-        model.detect(imageData).then(function(predictions) {
-          objectDetected = false;
-          predictions.forEach(function(prediction) {
-            if (prediction.class === 'church') {
-              objectDetected = true;
-            }
+            var cameraContainer = document.getElementById('cameraContainer');
+            cameraContainer.appendChild(videoElement);
+          })
+          .catch(function (error) {
+            console.error('Error accessing the camera:', error);
           });
-
-          if (objectDetected) {
-            // Display the video container and play the video
-            videoContainer.style.display = 'block';
-            videoPlayer.src = 'images/video.mp4';
-            videoPlayer.play();
-          }
-
-          requestAnimationFrame(detectObjects);
-        });
+      } else {
+        console.error('getUserMedia is not supported in this browser.');
       }
-
-      detectObjects();
     }
   </script>
 </body>
