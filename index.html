@@ -2,12 +2,6 @@
 <html>
 <head>
   <title>Camera Viewer</title>
-  <style>
-  /* Reset styles for the video element */
-  #cameraContainer video {
-    filter: none;
-  }
-</style>
 </head>
 <body>
   <button onclick="openCamera()">Open Camera</button>
@@ -17,8 +11,16 @@
     function openCamera() {
       // Check if the browser supports getUserMedia
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Access the back camera
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        // Define resolution constraints
+        var constraints = {
+          video: {
+            width: { min: 1280, ideal: 1920, max: 2560 },
+            height: { min: 720, ideal: 1080, max: 1440 }
+          }
+        };
+
+        // Access the back camera with resolution constraints
+        navigator.mediaDevices.getUserMedia(constraints)
           .then(function (stream) {
             var videoElement = document.createElement('video');
             videoElement.srcObject = stream;
