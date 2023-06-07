@@ -11,8 +11,8 @@
     function openCamera() {
       // Check if the browser supports getUserMedia
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Access the user's camera
-        navigator.mediaDevices.getUserMedia({ video: true })
+        // Access the back camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
           .then(function (stream) {
             var videoElement = document.createElement('video');
             videoElement.srcObject = stream;
