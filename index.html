@@ -1,52 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Camera Viewer</title>
-</head>
-<body>
-  <button onclick="openCamera()">Open Camera</button>
-  <div id="cameraContainer"></div>
-
-  <script>
-    function openCamera() {
-      // Check if the browser supports getUserMedia
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Define resolution constraints
-        var constraints = {
-          video: {
-            width: { min: 1280, ideal: 1920, max: 2560 },
-            height: { min: 720, ideal: 1080, max: 1440 }
-          }
-        };
-
-        // Access the back camera with resolution constraints
-        navigator.mediaDevices.getUserMedia(constraints)
-          .then(function (stream) {
-            var videoElement = document.createElement('video');
-            videoElement.srcObject = stream;
-            videoElement.autoplay = true;
-            videoElement.playsinline = true; // For mobile compatibility
-
-            var cameraContainer = document.getElementById('cameraContainer');
-            cameraContainer.appendChild(videoElement);
-
-            // On mobile devices, stop the camera stream when the video is closed
-            videoElement.addEventListener('click', function () {
-              if (stream.active) {
-                var tracks = stream.getTracks();
-                tracks.forEach(function (track) {
-                  track.stop();
-                });
-              }
-            });
-          })
-          .catch(function (error) {
-            console.error('Error accessing the camera:', error);
-          });
-      } else {
-        console.error('getUserMedia is not supported in this browser.');
+  <head>
+    <title>Camera Viewer</title>
+    <style>
+      /* Reset styles for the video element */
+      #cameraContainer video {
+        filter: none;
       }
-    }
-  </script>
-</body>
+    </style>
+  </head>
+  <body>
+    <button onclick="openCamera()">Open Camera</button>
+    <div id="cameraContainer"></div>
+
+    <script>
+      function openCamera() {
+        // Check if the browser supports getUserMedia
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          // Access the back camera
+          var constraints = {
+            video: {
+              width: { min: 1280, ideal: 1920, max: 2560 },
+              height: { min: 720, ideal: 1080, max: 1440 },
+            },
+          };
+
+          navigator.mediaDevices
+            .getUserMedia({ video: { facingMode: "environment" } })
+            .then(function (stream) {
+              var videoElement = document.createElement("video");
+              videoElement.srcObject = stream;
+              videoElement.autoplay = true;
+              videoElement.playsinline = true; // For mobile compatibility
+
+              var cameraContainer = document.getElementById("cameraContainer");
+              cameraContainer.appendChild(videoElement);
+
+              // On mobile devices, stop the camera stream when the video is closed
+              videoElement.addEventListener("click", function () {
+                if (stream.active) {
+                  var tracks = stream.getTracks();
+                  tracks.forEach(function (track) {
+                    track.stop();
+                  });
+                }
+              });
+            })
+            .catch(function (error) {
+              console.error("Error accessing the camera:", error);
+            });
+        } else {
+          console.error("getUserMedia is not supported in this browser.");
+        }
+      }
+    </script>
+  </body>
 </html>
