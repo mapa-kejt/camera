@@ -4,7 +4,7 @@
   <title>Camera Viewer</title>
 </head>
 <body>
-  <button onclick="openCamera()" ontouch="openCamera()">Open Camera</button>
+  <button onclick="openCamera()">Open Camera</button>
   <div id="cameraContainer"></div>
 
   <script>
@@ -17,9 +17,20 @@
             var videoElement = document.createElement('video');
             videoElement.srcObject = stream;
             videoElement.autoplay = true;
+            videoElement.playsinline = true; // For mobile compatibility
 
             var cameraContainer = document.getElementById('cameraContainer');
             cameraContainer.appendChild(videoElement);
+
+            // On mobile devices, stop the camera stream when the video is closed
+            videoElement.addEventListener('click', function () {
+              if (stream.active) {
+                var tracks = stream.getTracks();
+                tracks.forEach(function (track) {
+                  track.stop();
+                });
+              }
+            });
           })
           .catch(function (error) {
             console.error('Error accessing the camera:', error);
