@@ -3,10 +3,11 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
   </head>
 
   <body>
-    <button id="capture">Ajdeeee</button>
+    <button id="capture">Capture</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
     <script>
       let enhancer = null;
@@ -23,7 +24,7 @@
 
       function startDetection() {
         enhancer.onFrame = async (frame) => {
-          const qrCode = await jsQR(frame.data, frame.width, frame.height);
+          const qrCode = jsQR(frame.data, frame.width, frame.height);
 
           console.log(qrCode); // Add this line to log the QR code data
 
