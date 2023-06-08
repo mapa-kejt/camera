@@ -12,7 +12,7 @@
 </head>
 <body>
   <div class="button-container">
-    <button id="startScanButton">Start Scan</button>
+    <button id="startScanButton"> Scan</button>
   </div>
   <video id="scanner" style="height: 80vh"></video>
   <script>
@@ -25,6 +25,7 @@
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
+          facingMode: "environment", // Use the back camera
         },
       };
 
