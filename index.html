@@ -6,7 +6,7 @@
   </head>
 
   <body>
-    <button id="capture">Capture</button>
+    <button id="capture">Ajdeeee</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
     <script>
       let enhancer = null;
@@ -24,6 +24,8 @@
       function startDetection() {
         enhancer.onFrame = async (frame) => {
           const qrCode = await jsQR(frame.data, frame.width, frame.height);
+
+          console.log(qrCode); // Add this line to log the QR code data
 
           if (qrCode && qrCode.data === "Crkva sv.Stosije") {
             // Replace with the specific data of your QR code
