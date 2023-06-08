@@ -58,16 +58,19 @@
       }
 
       function openVideo() {
-        // Create a video element
-        const video = document.createElement("video");
-        video.src = "images/video.mp4"; // Replace with the path to your video file
-        video.controls = true;
-        video.autoplay = true;
+        if (!videoOpened) {
+          // Create a video element
+          const video = document.createElement("video");
+          video.src = "images/video.mp4"; // Replace with the path to your video file
+          video.controls = true;
+          video.autoplay = true;
 
-        // Append the video element to the document body
-        document.body.appendChild(video);
+          // Append the video element to the document body
+          document.body.appendChild(video);
+
+          videoOpened = true;
+        }
       }
-
       (async () => {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
