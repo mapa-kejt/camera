@@ -3,21 +3,49 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </head>
 
   <body>
-    <button id="capture">Scan meee!</button>
+    <button id="capture">Capture</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
     <script>
       let enhancer = null;
-      (async () => {
+      let videoOpened = false;
+
+      async function openCamera() {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
           .getElementById("enhancerUIContainer")
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
-      })();
+        startDetection();
+      }
+
+      function startDetection() {
+        enhancer.onFrame = async (frame) => {
+          const qrCode = await jsQR(frame.data, frame.width, frame.height);
+
+          if (qrCode && qrCode.data === "Crkva sv.Stosije") {
+            // Replace with the specific data of your QR code
+            openVideo();
+          }
+        };
+      }
+
+      function openVideo() {
+        if (!videoOpened) {
+          // Create a video element
+          const video = document.createElement("video");
+          video.src = "images/video.mp4"; // Replace with the path to your video file
+          video.controls = true;
+          video.autoplay = true;
+
+          // Append the video element to the document body
+          document.body.appendChild(video);
+
+          videoOpened = true;
+        }
+      }
 
       document.getElementById("capture").onclick = () => {
         if (enhancer) {
@@ -45,46 +73,17 @@
           );
 
           popWindow.document.body.appendChild(frame.canvas);
-
-          // Get the base64 encoded image data of the frame
-          const imageData = frame.canvas.toDataURL();
-
-          // Send the image data for recognition
-          sendImageForRecognition(imageData);
         }
       };
 
-      // Function to send image to the server for recognition
-      function sendImageForRecognition(imageData) {
-        $.ajax({
-          url: "/recognize", // Modify the URL to match your server endpoint
-          type: "POST",
-          data: { image: imageData },
-          success: function (response) {
-            if (response === "specific_object") {
-              openVideo();
-            }
-          },
-          error: function (error) {
-            console.error("Error occurred during image recognition:", error);
-          },
-        });
-      }
-
-      function openVideo() {
-        if (!videoOpened) {
-          // Create a video element
-          const video = document.createElement("video");
-          video.src = "images/video.mp4"; // Replace with the path to your video file
-          video.controls = true;
-          video.autoplay = true;
-
-          // Append the video element to the document body
-          document.body.appendChild(video);
-
-          videoOpened = true;
-        }
-      }
+      (async () => {
+        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
+        document
+          .getElementById("enhancerUIContainer")
+          .appendChild(enhancer.getUIElement());
+        await enhancer.open(true);
+        startDetection();
+      })();
     </script>
   </body>
 </html>
