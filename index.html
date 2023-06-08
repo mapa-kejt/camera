@@ -3,70 +3,120 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/quagga"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
   </head>
+
   <body>
-    <button id="capture">Capture</button>
+    <button id="capture">Scan</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
-    <video id="videoPlayer" controls></video>
+    <img id="specificImage" src="images/qr.jpg" style="display: none" />
     <script>
       let enhancer = null;
+      let model = null;
+      let specificImageLoaded = false;
 
-      async function setupCamera() {
-        const videoElement = document.createElement("video");
-        videoElement.width = 640;
-        videoElement.height = 480;
+      async function detectObjects(frame) {
+        if (!specificImageLoaded) {
+          await loadSpecificImage();
+        }
 
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
+        // Perform object detection using the loaded model
+        const predictions = await model.detect(frame.canvas);
 
-        videoElement.srcObject = stream;
-        await videoElement.play();
+        // Check for specific objects (e.g., your specific image)
+        const specificImagePredictions = predictions.filter(
+          (prediction) => prediction.class === "specific-image-class"
+        );
 
-        return videoElement;
+        if (specificImagePredictions.length > 0) {
+          // Open the specified video when the specific image is detected
+          openVideo();
+        }
       }
 
-      async function main() {
+      async function loadSpecificImage() {
+        const specificImageElement = document.getElementById("specificImage");
+        const image = await tf.loadImage(specificImageElement.src);
+        model = await cocoSsd.load();
+        specificImageLoaded = true;
+      }
+
+      async function openCamera() {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
           .getElementById("enhancerUIContainer")
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
-
-        const videoPlayer = document.getElementById("videoPlayer");
-        const videoUrl = "images/video.mp4"; // Replace with the URL or path to your video
-
-        Quagga.init(
-          {
-            inputStream: {
-              name: "Live",
-              type: "LiveStream",
-              target: document.querySelector("#enhancerUIContainer video"),
-            },
-            decoder: {
-              readers: ["ean_reader"],
-            },
-          },
-          function (err) {
-            if (err) {
-              console.error(err);
-              return;
-            }
-            Quagga.start();
-
-            Quagga.onDetected(function (result) {
-              const code = result.codeResult.code;
-              if (code === "your-qr-code-data") {
-                videoPlayer.src = videoUrl;
-                Quagga.stop();
-              }
-            });
-          }
-        );
+        startDetection();
       }
 
-      document.getElementById("capture").onclick = main;
+      function startDetection() {
+        if (!model) {
+          loadModel().then(() => {
+            enhancer.onFrame = async (frame) => {
+              await detectObjects(frame);
+            };
+          });
+        } else {
+          enhancer.onFrame = async (frame) => {
+            await detectObjects(frame);
+          };
+        }
+      }
+
+      function openVideo() {
+        if (!videoOpened) {
+          // Create a video element
+          const video = document.createElement("video");
+          video.src = "images/video.mp4"; // Replace with the path to your video file
+          video.controls = true;
+          video.autoplay = true;
+
+          // Append the video element to the document body
+          document.body.appendChild(video);
+
+          videoOpened = true;
+        }
+      }
+
+      (async () => {
+        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
+        document
+          .getElementById("enhancerUIContainer")
+          .appendChild(enhancer.getUIElement());
+        await enhancer.open(true);
+        startDetection();
+      })();
+
+      document.getElementById("capture").onclick = () => {
+        if (enhancer) {
+          let frame = enhancer.getFrame();
+
+          let width = screen.availWidth;
+          let height = screen.availHeight;
+          let popW = 640,
+            popH = 640;
+          let left = (width - popW) / 2;
+          let top = (height - popH) / 2;
+
+          popWindow = window.open(
+            "",
+            "popup",
+            "width=" +
+              popW +
+              ",height=" +
+              popH +
+              ",top=" +
+              top +
+              ",left=" +
+              left +
+              ", scrollbars=yes"
+          );
+
+          popWindow.document.body.appendChild(frame.canvas);
+        }
+      };
     </script>
   </body>
 </html>
