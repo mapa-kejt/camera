@@ -7,12 +7,12 @@ import base64
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
+# ... existing code ...
 
 @app.route('/recognize', methods=['POST'])
 def recognize_image():
+    print('Recognize image endpoint called')
+
     # Access the image data sent from the frontend
     image_data = request.form.get('image')
 
@@ -47,6 +47,8 @@ def recognize_image():
         return 'specific_object'
     else:
         return 'not_specific_object'
+
+# ... existing code ...
 
 if __name__ == '__main__':
     app.run()
