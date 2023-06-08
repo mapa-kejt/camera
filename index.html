@@ -3,6 +3,8 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
   </head>
 
   <body>
@@ -10,12 +12,69 @@
     <div id="enhancerUIContainer" style="height: 100vh"></div>
     <script>
       let enhancer = null;
+      let model = null;
+
+      async function loadModel() {
+        // Load the COCO-SSD model from TensorFlow.js
+        model = await cocoSsd.load();
+      }
+
+      async function detectObjects(frame) {
+        // Perform object detection using the loaded model
+        const predictions = await model.detect(frame.canvas);
+
+        // Check for specific objects (e.g., church)
+        const churchPredictions = predictions.filter(
+          (prediction) => prediction.class === "church"
+        );
+
+        if (churchPredictions.length > 0) {
+          // Open the specified video when a church is detected
+          openVideo();
+        }
+      }
+
+      async function openCamera() {
+        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
+        document
+          .getElementById("enhancerUIContainer")
+          .appendChild(enhancer.getUIElement());
+        await enhancer.open(true);
+        startDetection();
+      }
+
+      function startDetection() {
+        if (!model) {
+          loadModel().then(() => {
+            enhancer.onFrame = async (frame) => {
+              await detectObjects(frame);
+            };
+          });
+        } else {
+          enhancer.onFrame = async (frame) => {
+            await detectObjects(frame);
+          };
+        }
+      }
+
+      function openVideo() {
+        // Create a video element
+        const video = document.createElement("video");
+        video.src = "images/video.mp4"; // Replace with the path to your video file
+        video.controls = true;
+        video.autoplay = true;
+
+        // Append the video element to the document body
+        document.body.appendChild(video);
+      }
+
       (async () => {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
           .getElementById("enhancerUIContainer")
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
+        startDetection();
       })();
 
       document.getElementById("capture").onclick = () => {
