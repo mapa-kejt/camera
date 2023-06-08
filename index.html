@@ -1,57 +1,53 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>QR Scanner Example</title>
-  <script src="https://unpkg.com/@zxing/library@0.18.4"></script>
-  <style>
-    .button-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
-  <div class="button-container">
-    <button id="startScanButton"> Scan</button>
-  </div>
-  <video id="scanner" style="height: 80vh"></video>
-  <script>
-    // Initialize the QR scanner
-    const codeReader = new ZXing.BrowserQRCodeReader();
+  <head>
+    <title>QR Scanner Example</title>
+    <script src="https://unpkg.com/@zxing/library@0.18.4"></script>
+    <style>
+      .button-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="button-container">
+      <button id="startScanButton">Start Scan</button>
+    </div>
+    <video id="scanner" style="height: 80vh"></video>
+    <script>
+      // Initialize the QR scanner
+      const codeReader = new ZXing.BrowserQRCodeReader();
 
-    // Function to start scanning
-    function startScan() {
-      const constraints = {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: "environment", // Use the back camera
-        },
-      };
-
-      navigator.mediaDevices.getUserMedia(constraints)
-        .then(function (stream) {
-          document.getElementById("scanner").srcObject = stream;
-          codeReader.decodeFromVideoElement("scanner", (result, error) => {
+      // Function to start scanning
+      function startScan() {
+        const constraints = {
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: { exact: "environment" }, // Use the back camera
+          },
+        };
+        codeReader
+          .decodeFromVideoDevice(null, "scanner", (result, error) => {
             if (result) {
               alert("Scanned content: " + result.text);
             }
             if (error && !(error instanceof ZXing.NotFoundException)) {
               console.error(error);
             }
+          })
+          .catch((error) => {
+            console.error(error);
           });
-        })
-        .catch(function (error) {
-          console.error(error);
-        });
 
-      document.getElementById("startScanButton").style.display = "none";
-    }
+        document.getElementById("startScanButton").style.display = "none";
+      }
 
-    // Add click event listener to the start scan button
-    document
-      .getElementById("startScanButton")
-      .addEventListener("click", startScan);
-  </script>
-</body>
+      // Add click event listener to the start scan button
+      document
+        .getElementById("startScanButton")
+        .addEventListener("click", startScan);
+    </script>
+  </body>
 </html>
