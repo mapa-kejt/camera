@@ -14,11 +14,6 @@
       let enhancer = null;
       let model = null;
 
-      async function loadModel() {
-        // Load the COCO-SSD model from TensorFlow.js
-        model = await cocoSsd.load();
-      }
-
       async function detectObjects(frame) {
         // Perform object detection using the loaded model
         const predictions = await model.detect(frame.canvas);
