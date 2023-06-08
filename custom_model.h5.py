@@ -3,6 +3,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.applications.resnet50 import preprocess_input, decode_predictions
 import numpy as np
+import base64
 
 app = Flask(__name__)
 
@@ -15,9 +16,12 @@ def recognize_image():
     # Access the image data sent from the frontend
     image_data = request.form.get('image')
 
+    # Decode the base64-encoded image data
+    image_data = base64.b64decode(image_data)
+
     # Save the image data to a file (e.g., specific_image.jpg)
     with open('specific_image.jpg', 'wb') as img_file:
-        img_file.write(image_data.decode('base64'))
+        img_file.write(image_data)
 
     # Perform the image recognition using the saved image file
 
