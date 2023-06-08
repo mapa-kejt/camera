@@ -1,65 +1,51 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Camera Viewer</title>
-    <style>
-      /* Reset styles for the video element */
-      #cameraContainer video {
-        filter: none;
-      }
-
-      #cameraContainer {
-        width: 320px; /* Adjust the width as needed */
-        height: 240px; /* Adjust the height as needed */
-      }
-    </style>
+    <title>Hello Camera</title>
+    <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
   </head>
+
   <body>
-    <button onclick="openCamera()">Open Camera</button>
-    <div id="cameraContainer"></div>
-
+    <button id="capture">Capture</button>
+    <div id="enhancerUIContainer" style="height: 100vh"></div>
     <script>
-      function openCamera() {
-        // Check if the browser supports getUserMedia
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Define resolution constraints for the back camera
-          var constraints = {
-            video: {
-              facingMode: "environment", // Use the back camera
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-          };
+      let enhancer = null;
+      (async () => {
+        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
+        document
+          .getElementById("enhancerUIContainer")
+          .appendChild(enhancer.getUIElement());
+        await enhancer.open(true);
+      })();
 
-          // Access the back camera with the specified resolution constraints
-          navigator.mediaDevices
-            .getUserMedia(constraints)
-            .then(function (stream) {
-              var videoElement = document.createElement("video");
-              videoElement.srcObject = stream;
-              videoElement.autoplay = true;
-              videoElement.playsinline = true; // For mobile compatibility
+      document.getElementById("capture").onclick = () => {
+        if (enhancer) {
+          let frame = enhancer.getFrame();
 
-              var cameraContainer = document.getElementById("cameraContainer");
-              cameraContainer.appendChild(videoElement);
+          let width = screen.availWidth;
+          let height = screen.availHeight;
+          let popW = 640,
+            popH = 640;
+          let left = (width - popW) / 2;
+          let top = (height - popH) / 2;
 
-              // On mobile devices, stop the camera stream when the video is closed
-              videoElement.addEventListener("click", function () {
-                if (stream.active) {
-                  var tracks = stream.getTracks();
-                  tracks.forEach(function (track) {
-                    track.stop();
-                  });
-                }
-              });
-            })
-            .catch(function (error) {
-              console.error("Error accessing the camera:", error);
-            });
-        } else {
-          console.error("getUserMedia is not supported in this browser.");
+          popWindow = window.open(
+            "",
+            "popup",
+            "width=" +
+              popW +
+              ",height=" +
+              popH +
+              ",top=" +
+              top +
+              ",left=" +
+              left +
+              ", scrollbars=yes"
+          );
+
+          popWindow.document.body.appendChild(frame.canvas);
         }
-      }
+      };
     </script>
   </body>
 </html>
