@@ -1,90 +1,39 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Hello Camera</title>
-    <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@2.0.2/dist/jsQR.js"></script>
+    <title>QR Scanner Example</title>
+    <script src="https://unpkg.com/@zxing/library@0.18.4"></script>
   </head>
-
   <body>
-    <button id="capture">aj plssss</button>
-    <div id="enhancerUIContainer" style="height: 100vh"></div>
+    <video id="scanner" style="width: 300px; height: 200px"></video>
+    <button id="startScanButton">Start Scan</button>
+
     <script>
-      let enhancer = null;
-      let videoOpened = false;
+      // Initialize the QR scanner
+      const codeReader = new ZXing.BrowserQRCodeReader();
 
-      async function openCamera() {
-        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
-        document
-          .getElementById("enhancerUIContainer")
-          .appendChild(enhancer.getUIElement());
-        await enhancer.open(true);
-        startDetection();
+      // Function to start scanning
+      function startScan() {
+        codeReader
+          .decodeFromVideoDevice(null, "scanner", (result, error) => {
+            if (result) {
+              alert("Scanned content: " + result.text);
+            }
+            if (error && !(error instanceof ZXing.NotFoundException)) {
+              console.error(error);
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+
+        document.getElementById("startScanButton").style.display = "none";
       }
 
-      function startDetection() {
-        enhancer.onFrame = async (frame) => {
-          const qrCode = jsQR(frame.data, frame.width, frame.height);
-
-          if (qrCode && qrCode.data === "Crkva sv.Stosije") {
-            // Replace with the specific data of your QR code
-            openVideo();
-          }
-        };
-      }
-
-      function openVideo() {
-        if (!videoOpened) {
-          // Create a video element
-          const video = document.createElement("video");
-          video.src = "images/video.mp4"; // Replace with the path to your video file
-          video.controls = true;
-          video.autoplay = true;
-
-          // Append the video element to the document body
-          document.body.appendChild(video);
-
-          videoOpened = true;
-        }
-      }
-
-      document.getElementById("capture").onclick = () => {
-        if (enhancer) {
-          let frame = enhancer.getFrame();
-
-          let width = screen.availWidth;
-          let height = screen.availHeight;
-          let popW = 640,
-            popH = 640;
-          let left = (width - popW) / 2;
-          let top = (height - popH) / 2;
-
-          popWindow = window.open(
-            "",
-            "popup",
-            "width=" +
-              popW +
-              ",height=" +
-              popH +
-              ",top=" +
-              top +
-              ",left=" +
-              left +
-              ", scrollbars=yes"
-          );
-
-          popWindow.document.body.appendChild(frame.canvas);
-        }
-      };
-
-      (async () => {
-        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
-        document
-          .getElementById("enhancerUIContainer")
-          .appendChild(enhancer.getUIElement());
-        await enhancer.open(true);
-        startDetection();
-      })();
+      // Add click event listener to the start scan button
+      document
+        .getElementById("startScanButton")
+        .addEventListener("click", startScan);
     </script>
   </body>
 </html>
