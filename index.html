@@ -3,90 +3,20 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </head>
 
   <body>
-    <button id="capture">Scan</button>
+    <button id="capture">Capture</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
-    <img id="specificImage" src="images/qr.jpg" style="display: none" />
     <script>
       let enhancer = null;
-      let model = null;
-      let specificImageLoaded = false;
-
-      async function detectObjects(frame) {
-        if (!specificImageLoaded) {
-          await loadSpecificImage();
-        }
-
-        // Perform object detection using the loaded model
-        const predictions = await model.detect(frame.canvas);
-
-        // Check for specific objects (e.g., your specific image)
-        const specificImagePredictions = predictions.filter(
-          (prediction) => prediction.class === "specific-image-class"
-        );
-
-        if (specificImagePredictions.length > 0) {
-          // Open the specified video when the specific image is detected
-          openVideo();
-        }
-      }
-
-      async function loadSpecificImage() {
-        const specificImageElement = document.getElementById("specificImage");
-        const image = await tf.loadImage(specificImageElement.src);
-        model = await cocoSsd.load();
-        specificImageLoaded = true;
-      }
-
-      async function openCamera() {
-        enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
-        document
-          .getElementById("enhancerUIContainer")
-          .appendChild(enhancer.getUIElement());
-        await enhancer.open(true);
-        startDetection();
-      }
-
-      function startDetection() {
-        if (!model) {
-          loadModel().then(() => {
-            enhancer.onFrame = async (frame) => {
-              await detectObjects(frame);
-            };
-          });
-        } else {
-          enhancer.onFrame = async (frame) => {
-            await detectObjects(frame);
-          };
-        }
-      }
-
-      function openVideo() {
-        if (!videoOpened) {
-          // Create a video element
-          const video = document.createElement("video");
-          video.src = "images/video.mp4"; // Replace with the path to your video file
-          video.controls = true;
-          video.autoplay = true;
-
-          // Append the video element to the document body
-          document.body.appendChild(video);
-
-          videoOpened = true;
-        }
-      }
-
       (async () => {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
           .getElementById("enhancerUIContainer")
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
-        startDetection();
       })();
 
       document.getElementById("capture").onclick = () => {
@@ -115,8 +45,46 @@
           );
 
           popWindow.document.body.appendChild(frame.canvas);
+
+          // Get the base64 encoded image data of the frame
+          const imageData = frame.canvas.toDataURL();
+
+          // Send the image data for recognition
+          sendImageForRecognition(imageData);
         }
       };
+
+      // Function to send image to the server for recognition
+      function sendImageForRecognition(imageData) {
+        $.ajax({
+          url: "/recognize", // Modify the URL to match your server endpoint
+          type: "POST",
+          data: { image: imageData },
+          success: function (response) {
+            if (response === "specific_object") {
+              openVideo();
+            }
+          },
+          error: function (error) {
+            console.error("Error occurred during image recognition:", error);
+          },
+        });
+      }
+
+      function openVideo() {
+        if (!videoOpened) {
+          // Create a video element
+          const video = document.createElement("video");
+          video.src = "images/video.mp4"; // Replace with the path to your video file
+          video.controls = true;
+          video.autoplay = true;
+
+          // Append the video element to the document body
+          document.body.appendChild(video);
+
+          videoOpened = true;
+        }
+      }
     </script>
   </body>
 </html>
