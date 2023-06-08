@@ -25,7 +25,7 @@ def recognize_image():
     model = tf.keras.models.load_model('custom_model.h5')
 
     # Path to the specific image you want to recognize
-    specific_image_path = 'specific_image.jpg'
+    specific_image_path = 'images/qr.jpg'
 
     # Load the specific image and preprocess it
     img = image.load_img(specific_image_path, target_size=(224, 224))
