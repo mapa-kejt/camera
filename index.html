@@ -17,16 +17,17 @@
       function openCamera() {
         // Check if the browser supports getUserMedia
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Access the back camera
+          // Define resolution constraints
           var constraints = {
             video: {
-              width: { ideal: 2560 },
-              height: {   ideal: 1440 },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
             },
           };
 
+          // Access the camera with higher resolution constraints
           navigator.mediaDevices
-            .getUserMedia({ video: { facingMode: "environment" } })
+            .getUserMedia(constraints)
             .then(function (stream) {
               var videoElement = document.createElement("video");
               videoElement.srcObject = stream;
