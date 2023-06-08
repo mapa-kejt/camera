@@ -2,54 +2,54 @@
 <html>
   <head>
     <title>QR Scanner Example</title>
-    <script
-      type="text/javascript"
-      src="https://unpkg.com/@zxing/library@latest"
-    ></script>
+    <script src="https://unpkg.com/@zxing/library@0.18.4"></script>
+    <style>
+      .button-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+    </style>
   </head>
   <body>
-    <video id="webcam-preview"></video>
-    <p id="result"></p>
+    <div class="button-container">
+      <button id="startScanButton">Start Scan</button>
+    </div>
+    <video id="scanner" style="height: 80vh"></video>
     <script>
+      // Initialize the QR scanner
       const codeReader = new ZXing.BrowserQRCodeReader();
 
-      codeReader.decodeFromVideoDevice(
-        null,
-        "webcam-preview",
-        (result, err) => {
-          if (result) {
-            // properly decoded qr code
-            console.log("Found QR code!", result);
-            document.getElementById("result").textContent = result.text;
-          }
+      // Function to start scanning
+      function startScan() {
+        const videoConstraints = {
+          advanced: [{ focusMode: "continuous" }],
+        };
 
-          if (err) {
-            // As long as this error belongs into one of the following categories
-            // the code reader is going to continue as excepted. Any other error
-            // will stop the decoding loop.
-            //
-            // Excepted Exceptions:
-            //
-            //  - NotFoundException
-            //  - ChecksumException
-            //  - FormatException
-
-            if (err instanceof ZXing.NotFoundException) {
-              console.log("No QR code found.");
+        const decodePromise = codeReader.decodeFromVideoDevice(
+          null,
+          "scanner",
+          (result, error) => {
+            if (result) {
+              alert("Scanned content: " + result.text);
             }
-
-            if (err instanceof ZXing.ChecksumException) {
-              console.log(
-                "A code was found, but it's read value was not valid."
-              );
+            if (error && !(error instanceof ZXing.NotFoundException)) {
+              console.error(error);
             }
+          },
+          videoConstraints // Pass the video constraints
+        );
 
-            if (err instanceof ZXing.FormatException) {
-              console.log("A code was found, but it was in a invalid format.");
-            }
-          }
-        }
-      );
+        decodePromise.catch((error) => {
+          console.error(error);
+        });
+
+        document.getElementById("startScanButton").style.display = "none";
+      }
+
+      // Add click event listener to the start scan button
+      document
+        .getElementById("startScanButton")
+        .addEventListener("click", startScan);
     </script>
   </body>
 </html>
