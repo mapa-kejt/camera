@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Camera and QR Scanner Example</title>
-    <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
+    <title>QR Scanner Example</title>
     <script src="https://unpkg.com/@zxing/library@0.18.4"></script>
     <style>
       .button-container {
@@ -13,83 +12,44 @@
   </head>
   <body>
     <div class="button-container">
-      <button id="openCameraButton">Ocel</button>
-      <button id="startScanButton" style="display: none;">Start Scan</button>
+      <button id="startScanButton">Jbt led Scan</button>
     </div>
-    <div id="enhancerUIContainer" style="height: 80vh; display: none;"></div>
-    <video id="scanner" style="height: 80vh; display: none;"></video>
+    <video id="scanner" style="height: 80vh"></video>
     <script>
-      let enhancer = null;
-      let codeReader = null;
+      // Initialize the QR scanner
+      const codeReader = new ZXing.BrowserQRCodeReader();
 
-      // Function to open the camera
-      function openCamera() {
-        const constraints = {
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-            facingMode: { exact: "environment" }, // Use the back camera
-          },
+      // Function to start scanning
+      function startScan() {
+        const videoConstraints = {
+          advanced: [{ focusMode: 'continuous' }]
         };
 
-        // Create the camera enhancer instance
-        Dynamsoft.DCE.CameraEnhancer.createInstance()
-          .then((instance) => {
-            enhancer = instance;
-            document
-              .getElementById("enhancerUIContainer")
-              .appendChild(enhancer.getUIElement());
-            return enhancer.open(true);
-          })
-          .then(() => {
-            document.getElementById("enhancerUIContainer").style.display =
-              "block";
-            document.getElementById("openCameraButton").style.display = "none";
-            document.getElementById("startScanButton").style.display = "block";
+        const decodePromise = codeReader.decodeFromVideoDevice(
+          null,
+          "scanner",
+          (result, error) => {
+            if (result) {
+              alert("Scanned content: " + result.text);
+            }
+            if (error && !(error instanceof ZXing.NotFoundException)) {
+              console.error(error);
+            }
+          },
+          videoConstraints // Pass the video constraints
+        );
 
-            // Initialize the QR scanner
-            codeReader = new ZXing.BrowserMultiFormatReader();
-            codeReader
-              .listVideoInputDevices()
-              .then((videoInputDevices) => {
-                // Use the back camera
-                const selectedDevice = videoInputDevices.find((device) =>
-                  device.label.toLowerCase().includes("back")
-                );
-                const constraints = {
-                  video: {
-                    deviceId: selectedDevice.deviceId,
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
-                  },
-                };
-                return codeReader.decodeFromVideoDevice(
-                  selectedDevice.deviceId,
-                  "scanner",
-                  (result, error) => {
-                    if (result) {
-                      alert("Scanned content: " + result.text);
-                    }
-                    if (error && !(error instanceof ZXing.NotFoundException)) {
-                      console.error(error);
-                    }
-                  },
-                  constraints
-                );
-              })
-              .catch((error) => {
-                console.error(error);
-              });
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+        decodePromise.catch((error) => {
+          console.error(error);
+        });
+
+        document.getElementById("startScanButton").style.display = "none";
       }
 
-      // Add click event listener to the open camera button
+      // Add click event listener to the start scan button
       document
-        .getElementById("openCameraButton")
-        .addEventListener("click", openCamera);
+        .getElementById("startScanButton")
+        .addEventListener("click", startScan);
     </script>
   </body>
 </html>
