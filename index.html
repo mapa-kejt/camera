@@ -3,8 +3,7 @@
   <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@3.13.0/dist/coco-ssd.min.js"></script>
+    <script src="https://unpkg.com/qr-scanner/qr-scanner.min.js"></script>
   </head>
   <body>
     <button id="capture">Capture</button>
@@ -12,34 +11,37 @@
 
     <script>
       let enhancer = null;
-      let model = null;
+      let video = null;
+      let scanner = null;
 
       async function setupCamera() {
-        const video = document.createElement("video");
-        video.width = 640;
-        video.height = 480;
+        const videoElement = document.createElement("video");
+        videoElement.width = 640;
+        videoElement.height = 480;
 
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
         });
 
-        video.srcObject = stream;
-        await video.play();
+        videoElement.srcObject = stream;
+        await videoElement.play();
 
-        return video;
+        return videoElement;
       }
 
-      async function detectObjects(frame) {
-        const predictions = await model.detect(frame);
-
-        const churchPredictions = predictions.filter(
-          (prediction) => prediction.class === "church"
-        );
-
-        if (churchPredictions.length > 0) {
-          // Open the specified video or perform any action here
-          const videoUrl = "images/video.mp4"; // Replace with the URL or path to your video
-          window.open(videoUrl);
+      async function detectQRCode(frame) {
+        try {
+          const qrCode = await scanner.scanImage(frame);
+          if (qrCode && qrCode.length > 0) {
+            const qrData = qrCode[0].data;
+            if (qrData === " Crkva sv.Stosije") {
+              // Replace with the QR code data you want to detect
+              const videoUrl = "images/video.mp4"; // Replace with the URL or path to your video
+              window.open(videoUrl);
+            }
+          }
+        } catch (error) {
+          console.error(error);
         }
       }
 
@@ -50,24 +52,15 @@
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
 
-        const video = await setupCamera();
-        model = await cocoSsd.load();
+        video = await setupCamera();
+
+        scanner = new window.QRScanner(video, (result) => {
+          console.log("QR Code detected:", result);
+        });
 
         setInterval(async () => {
           const frame = enhancer.getFrame();
-          detectObjects(video);
-
-          // Display the camera frame
-          const canvas = document.createElement("canvas");
-          canvas.width = video.width;
-          canvas.height = video.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          // Replace the container content with the camera frame
-          const container = document.getElementById("enhancerUIContainer");
-          container.innerHTML = "";
-          container.appendChild(canvas);
+          detectQRCode(frame);
         }, 1000);
       }
 
