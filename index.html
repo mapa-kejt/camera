@@ -7,6 +7,11 @@
       #cameraContainer video {
         filter: none;
       }
+
+      #cameraContainer {
+        width: 320px; /* Adjust the width as needed */
+        height: 240px; /* Adjust the height as needed */
+      }
     </style>
   </head>
   <body>
@@ -17,15 +22,16 @@
       function openCamera() {
         // Check if the browser supports getUserMedia
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          // Define resolution constraints
+          // Define resolution constraints for the back camera
           var constraints = {
             video: {
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
+              facingMode: "environment", // Use the back camera
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
             },
           };
 
-          // Access the camera with higher resolution constraints
+          // Access the back camera with the specified resolution constraints
           navigator.mediaDevices
             .getUserMedia(constraints)
             .then(function (stream) {
