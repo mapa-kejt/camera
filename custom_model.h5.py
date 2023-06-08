@@ -19,8 +19,8 @@ def recognize_image():
     # Decode the base64-encoded image data
     image_data = base64.b64decode(image_data)
 
-    # Save the image data to a file (e.g., specific_image.jpg)
-    with open('specific_image.jpg', 'wb') as img_file:
+    # Save the image data to a file (e.g., qr.jpg)
+    with open('images/qr.jpg', 'wb') as img_file:
         img_file.write(image_data)
 
     # Perform the image recognition using the saved image file
