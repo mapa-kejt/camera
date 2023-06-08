@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
-  <head> 
+  <head>
     <title>Hello Camera</title>
     <script src="https://unpkg.com/dynamsoft-camera-enhancer@2.1.0/dist/dce.js"></script>
-    <script src="https://unpkg.com/qr-scanner/qr-scanner.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quagga"></script>
   </head>
   <body>
     <button id="capture">Capture</button>
     <div id="enhancerUIContainer" style="height: 100vh"></div>
-
+    <video id="videoPlayer" controls></video>
     <script>
       let enhancer = null;
-      let video = null;
-      let scanner = null;
 
       async function setupCamera() {
         const videoElement = document.createElement("video");
@@ -29,22 +27,6 @@
         return videoElement;
       }
 
-      async function detectQRCode(frame) {
-        try {
-          const qrCode = await scanner.scanImage(frame);
-          if (qrCode && qrCode.length > 0) {
-            const qrData = qrCode[0].data;
-            if (qrData === " Crkva sv.Stosije") {
-              // Replace with the QR code data you want to detect
-              const videoUrl = "images/video.mp4"; // Replace with the URL or path to your video
-              window.open(videoUrl);
-            }
-          }
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
       async function main() {
         enhancer = await Dynamsoft.DCE.CameraEnhancer.createInstance();
         document
@@ -52,16 +34,36 @@
           .appendChild(enhancer.getUIElement());
         await enhancer.open(true);
 
-        video = await setupCamera();
+        const videoPlayer = document.getElementById("videoPlayer");
+        const videoUrl = "images/video.mp4"; // Replace with the URL or path to your video
 
-        scanner = new window.QRScanner(video, (result) => {
-          console.log("QR Code detected:", result);
-        });
+        Quagga.init(
+          {
+            inputStream: {
+              name: "Live",
+              type: "LiveStream",
+              target: document.querySelector("#enhancerUIContainer video"),
+            },
+            decoder: {
+              readers: ["ean_reader"],
+            },
+          },
+          function (err) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            Quagga.start();
 
-        setInterval(async () => {
-          const frame = enhancer.getFrame();
-          detectQRCode(frame);
-        }, 1000);
+            Quagga.onDetected(function (result) {
+              const code = result.codeResult.code;
+              if (code === "your-qr-code-data") {
+                videoPlayer.src = videoUrl;
+                Quagga.stop();
+              }
+            });
+          }
+        );
       }
 
       document.getElementById("capture").onclick = main;
